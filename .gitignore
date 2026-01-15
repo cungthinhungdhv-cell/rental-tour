@@ -1,0 +1,6 @@
+# IDE
+.idea/
+.qodo/
+
+# Token
+Токен пуша.txt
