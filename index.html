@@ -468,6 +468,10 @@
             font-size: 1em;
         }
 
+        .agent-hidden {
+            display: none !important;
+        }
+
         /* Book Button */
         .book-btn {
             display: flex;
@@ -1111,7 +1115,7 @@
 
         <!-- Header -->
         <div class="header">
-            <img src="logo.jpg" alt="Ньунг - Переводчик и Гид" class="logo">
+            <img src="logo.jpg" alt="Ньунг - Переводчик и Гид" class="logo" id="nhung-logo">
             <h1>Найди свой Дананг</h1>
             <p class="header-subtitle">Индивидуальный тур по районам для тех, кто ищет жильё</p>
             <div class="header-info">
@@ -1578,10 +1582,10 @@
                             <span class="included-status">включено ✓</span>
                         </div>
                     </div>
-                    <a href="https://t.me/nhung_translator_danang" target="_blank" class="book-btn">
+                    <a href="https://t.me/nhung_translator_danang" target="_blank" class="book-btn" id="book-btn-calc">
                         <span>📩 Забронировать тур</span>
                     </a>
-                    <a href="https://t.me/nhung_translator_danang_reviews" target="_blank" class="reviews-inline-link">
+                    <a href="https://t.me/nhung_translator_danang_reviews" target="_blank" class="reviews-inline-link" id="reviews-inline">
                         <span>⭐</span>
                         <span>Читайте отзывы наших клиентов в Telegram</span>
                         <span class="reviews-arrow">→</span>
@@ -1602,12 +1606,12 @@
 
         <!-- Footer -->
         <div class="footer">
-            <p>Найдите свой идеальный район в Дананге вместе со мной!</p>
-            <p style="margin-top: 10px; opacity: 0.8;">Ньунг - Переводчик · Гид · Визы | Вьетнамский | Русский | Английский</p>
-            <a href="https://t.me/nhung_translator_danang" target="_blank" class="book-btn" style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); box-shadow: 0 6px 25px rgba(255, 152, 0, 0.5);">
+            <p id="footer-slogan">Найдите свой идеальный район в Дананге!</p>
+            <p style="margin-top: 10px; opacity: 0.8;" id="footer-nhung">Ньунг - Переводчик · Гид · Визы | Вьетнамский | Русский | Английский</p>
+            <a href="https://t.me/nhung_translator_danang" target="_blank" class="book-btn" style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); box-shadow: 0 6px 25px rgba(255, 152, 0, 0.5);" id="book-btn-footer">
                 <span>📩 Забронировать тур</span>
             </a>
-            <a href="https://t.me/nhung_translator_danang_reviews" target="_blank" class="reviews-btn">
+            <a href="https://t.me/nhung_translator_danang_reviews" target="_blank" class="reviews-btn" id="reviews-footer">
                 <span>💬</span>
                 <span>Читать отзывы клиентов</span>
                 <span class="reviews-platform">Telegram</span>
@@ -1616,6 +1620,27 @@
     </div>
 
     <script>
+        // Агентский режим: ?m=X (наценка $/чел), ?mt=X (наценка $/группа)
+        const urlParams = new URLSearchParams(window.location.search);
+        const agentMarkupPerPerson = parseFloat(urlParams.get('m')) || 0;
+        const agentMarkupTotal = parseFloat(urlParams.get('mt')) || 0;
+        const isAgentMode = urlParams.has('m') || urlParams.has('mt');
+
+        if (isAgentMode) {
+            document.addEventListener('DOMContentLoaded', () => {
+                ['nhung-logo', 'book-btn-calc', 'reviews-inline', 'footer-nhung', 'book-btn-footer', 'reviews-footer'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.add('agent-hidden');
+                });
+                document.querySelectorAll('.tour-nav-btn[href]').forEach(link => {
+                    const url = new URL(link.href);
+                    if (urlParams.has('m')) url.searchParams.set('m', urlParams.get('m'));
+                    if (urlParams.has('mt')) url.searchParams.set('mt', urlParams.get('mt'));
+                    link.href = url.toString();
+                });
+            });
+        }
+
         // Курс USD (fallback: 1 USD = 26313 VND)
         let vndPerUsd = 26313;
 
@@ -1771,6 +1796,11 @@
             const motoDiscount = 1500000;
             if (useMoto) {
                 finalPrice -= motoDiscount;
+            }
+
+            if (isAgentMode) {
+                const markupVnd = (agentMarkupPerPerson * totalPeople + agentMarkupTotal) * vndPerUsd;
+                finalPrice += Math.round(markupVnd);
             }
 
             const pricePerPerson = Math.ceil(finalPrice / totalPeople);
