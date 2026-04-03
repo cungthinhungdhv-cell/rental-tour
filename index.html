@@ -1577,6 +1577,10 @@
                             <span>🍪 Снеки и вода</span>
                             <span class="included-status">включено ✓</span>
                         </div>
+                        <div class="calc-included-item agent-hidden" id="calc-food-item">
+                            <span>🍽️ Питание</span>
+                            <span><span id="price-food" class="included-price"></span> <span class="included-status">включено ✓</span></span>
+                        </div>
                         <div class="calc-included-item">
                             <span>📋 Консультация по аренде жилья</span>
                             <span class="included-status">включено ✓</span>
@@ -1639,6 +1643,14 @@
                         notice.innerHTML = '<strong>🍽️ Питание включено</strong> Бюджет на питание: до $' + agentFood + ' на человека. Сверх бюджета — за счёт гостя.';
                     } else {
                         notice.innerHTML = '<strong>🍽️ Питание включено</strong>';
+                    }
+                }
+                const foodItem = document.getElementById('calc-food-item');
+                if (foodItem && urlParams.has('f')) {
+                    foodItem.classList.remove('agent-hidden');
+                    const priceFood = document.getElementById('price-food');
+                    if (priceFood && agentFood > 0) {
+                        priceFood.textContent = 'до $' + agentFood + '/чел';
                     }
                 }
                 document.querySelectorAll('.tour-nav-btn[href]').forEach(link => {
