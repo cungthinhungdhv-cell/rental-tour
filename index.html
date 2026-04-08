@@ -1626,9 +1626,9 @@
     <script>
         // Агентский режим: ?m=X ($/чел), ?mt=X ($/группа), ?f=X (питание $/чел)
         const urlParams = new URLSearchParams(window.location.search);
-        const agentMarkupPerPerson = parseFloat(urlParams.get('m')) || 0;
-        const agentMarkupTotal = parseFloat(urlParams.get('mt')) || 0;
-        const agentFood = parseFloat(urlParams.get('f')) || 0;
+        const agentMarkupPerPerson = parseFloat((urlParams.get('m') || '0').replace(',', '.'));
+        const agentMarkupTotal = parseFloat((urlParams.get('mt') || '0').replace(',', '.'));
+        const agentFood = parseFloat((urlParams.get('f') || '0').replace(',', '.'));
         const isAgentMode = urlParams.has('m') || urlParams.has('mt') || urlParams.has('f');
 
         if (isAgentMode) {
