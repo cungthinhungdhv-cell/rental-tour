@@ -1,0 +1,65 @@
+{
+  "tourId": "tour_1768494429522",
+  "transport": {
+    "car4": "1600000",
+    "car7": "2000000",
+    "car16": "3000000"
+  },
+  "profit": {
+    "adultPercent": "49",
+    "adultVnd": "1100000",
+    "child1Percent": "0",
+    "child1Vnd": "0",
+    "child2Percent": "17.9",
+    "child2Vnd": "300000",
+    "minProfit1Person": "2500000",
+    "minProfit2People": "3000000",
+    "minProfit3Plus": "3500000",
+    "partnerDiscountPercent": "0"
+  },
+  "staff": [
+    {
+      "name": "Гид 1 день",
+      "dailyRate": "600000"
+    },
+    {
+      "name": "Питание гиду",
+      "dailyRate": "200000"
+    },
+    {
+      "name": "Прочие расходы",
+      "dailyRate": "100000"
+    }
+  ],
+  "tickets": [
+    {
+      "name": "Мраморные горы",
+      "adultPrice": "70000",
+      "child1Price": "0",
+      "child2Price": "40000"
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "Группа 1",
+      "adults": "2",
+      "children1": "0",
+      "children2": "0"
+    },
+    {
+      "name": "Группа 2",
+      "adults": "4",
+      "children1": "0",
+      "children2": "0"
+    },
+    {
+      "name": "Группа 3",
+      "adults": "2",
+      "children1": "0",
+      "children2": "2"
+    }
+  ],
+  "scenarioCounter": 63,
+  "ticketCounter": 27,
+  "staffCounter": 55
+}
