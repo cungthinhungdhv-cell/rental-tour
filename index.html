@@ -1682,28 +1682,15 @@
             return Math.round(vnd / vndPerUsd);
         }
 
-        // Конфигурация цен для Rental Tour (из tour_1768494429522.json)
+        // Конфигурация для Rental Tour
+        // ВАЖНО: себестоимость и маржа здесь НЕ хранятся. Финальная цена считается
+        // на сервере tours.itripster.com (источник правды). В исходнике только то,
+        // что и так показывается клиенту: транспорт.
         const CONFIG = {
             transport: {
                 car4: 1600000,   // до 3 человек
                 car7: 2000000,   // до 6 человек
                 car16: 3000000   // до 15 человек
-            },
-            profit: {
-                adultVnd: 1100000,
-                child1Vnd: 0,
-                child2Vnd: 300000,
-                minProfit1Person: 2500000,
-                minProfit2People: 3000000,
-                minProfit3Plus: 3500000
-            },
-            staff: {
-                total: 900000  // гид 600k + питание 200k + прочее 100k
-            },
-            tickets: {
-                adultPrice: 70000,    // Мраморные горы взрослый
-                child1Price: 0,       // до 1м бесплатно
-                child2Price: 40000    // 1-1.4м
             }
         };
 
@@ -1736,7 +1723,7 @@
         }
 
         // Основная функция расчёта
-        function calculateTour() {
+        async function calculateTour() {
             const adults = parseInt(document.getElementById('calc-adults').value) || 0;
             const children1 = parseInt(document.getElementById('calc-children1').value) || 0;
             const children2 = parseInt(document.getElementById('calc-children2').value) || 0;
@@ -1750,6 +1737,7 @@
             // Валидация: минимум 1 взрослый
             if (adults < 1) {
                 resultEl.classList.remove('visible');
+                errorEl.textContent = 'Пожалуйста, укажите хотя бы 1 взрослого';
                 errorEl.classList.add('visible');
                 motoOptionEl.style.display = 'none';
                 return;
@@ -1779,42 +1767,21 @@
             document.getElementById('row-children2').style.display = children2 > 0 ? 'flex' : 'none';
             document.getElementById('row-children1').style.display = children1 > 0 ? 'flex' : 'none';
 
-            // 1. Расчёт билетов (Мраморные горы)
-            const ticketsTotal =
-                (adults * CONFIG.tickets.adultPrice) +
-                (children1 * CONFIG.tickets.child1Price) +
-                (children2 * CONFIG.tickets.child2Price);
-
-            // 2. Выбор транспорта
+            // Транспорт — для подписи машины в блоке «включено» (не секрет)
             const car = selectCar(totalPeople);
 
-            // 3. Расчёт себестоимости
-            const costTotal = ticketsTotal + CONFIG.staff.total + car.price;
-
-            // 4. Расчёт маржи
-            let profitTotal =
-                (adults * CONFIG.profit.adultVnd) +
-                (children1 * CONFIG.profit.child1Vnd) +
-                (children2 * CONFIG.profit.child2Vnd);
-
-            // 5. Применяем минимальную маржу (дети до 1м не учитываются)
-            let minProfit;
-            if (payingPeople === 1) {
-                minProfit = CONFIG.profit.minProfit1Person;
-            } else if (payingPeople === 2) {
-                minProfit = CONFIG.profit.minProfit2People;
-            } else {
-                minProfit = CONFIG.profit.minProfit3Plus;
+            // Финальная цена — с сервера (источник правды). Маржа на сервере.
+            const priceData = await fetchLivePrice(adults, children1, children2);
+            if (!priceData) {
+                errorEl.textContent = 'Не удалось получить актуальную цену. Напишите нам в Telegram — подскажем стоимость.';
+                errorEl.classList.add('visible');
+                resultEl.classList.remove('visible');
+                return;
             }
 
-            if (profitTotal < minProfit) {
-                profitTotal = minProfit;
-            }
+            let finalPrice = priceData.totalPrice;
 
-            // 6. Финальная цена
-            let finalPrice = costTotal + profitTotal;
-
-            // 7. Скидка за мото (-1,500,000 VND)
+            // Скидка за мото (-1,500,000 VND)
             const motoDiscount = 1500000;
             if (useMoto) {
                 finalPrice -= motoDiscount;
@@ -1867,10 +1834,33 @@
             });
         });
 
+        // === Финальная цена с сервера tours.itripster.com (источник правды) ===
+        // Меняешь цену в калькуляторе → сайт показывает её сразу при следующем расчёте.
+        // Себестоимость и маржа считаются на сервере и в браузер не передаются.
+        const TOUR_ID = 'tour_1768494429522';
+        const PRICE_API = 'https://tours.itripster.com/api/public/price/' + TOUR_ID;
+        let priceReqSeq = 0;
+        async function fetchLivePrice(adults, children1, children2) {
+            const my = ++priceReqSeq;
+            const cacheKey = `price_${TOUR_ID}_${adults}_${children1}_${children2}`;
+            try {
+                const r = await fetch(`${PRICE_API}?adults=${adults}&children1=${children1}&children2=${children2}`, { cache: 'no-store' });
+                if (!r.ok) throw new Error('http ' + r.status);
+                const data = await r.json();
+                if (my !== priceReqSeq) return null; // устаревший ответ при быстрых кликах
+                try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch (e) {}
+                return data;
+            } catch (e) {
+                // API недоступен — отдаём последнюю известную цену из кэша (только финал, без маржи)
+                try { const c = localStorage.getItem(cacheKey); if (c) return JSON.parse(c); } catch (e2) {}
+                return null;
+            }
+        }
+
         // Начальный расчёт при загрузке
         document.addEventListener('DOMContentLoaded', async () => {
             await fetchUsdRate();
-            calculateTour();
+            await calculateTour();
         });
     </script>
 </body>
